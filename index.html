@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SandX.io — Computational Infrastructure for Fragmented Systems</title>
+  <meta name="description" content="SandX builds deep computational infrastructure for entity resolution, graph intelligence, embedding systems, and distributed compute." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="logo">SandX<span class="dot">.</span>io</a>
+      <div class="nav-links">
+        <a href="#research">Research</a>
+        <a href="#docs">Docs</a>
+        <a href="https://github.com/sandx-io" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-tag">Phase 1 &mdash; Foundational Infrastructure</div>
+      <h1>Transforming fragmented signals into coherent computational meaning.</h1>
+      <p class="hero-sub">
+        SandX builds deep infrastructure for entity resolution, graph intelligence,
+        and distributed compute &mdash; for engineers and researchers who work with noisy,
+        probabilistic, real-world data at scale.
+      </p>
+      <div class="cta-group">
+        <a href="https://github.com/sandx-io" class="btn-primary" target="_blank" rel="noopener">View on GitHub</a>
+        <a href="#architecture" class="btn-secondary">Architecture</a>
+      </div>
+    </section>
+
+    <!-- Core Domains -->
+    <section class="domains" id="research">
+      <div class="section-label">Core Infrastructure</div>
+      <div class="domain-grid">
+
+        <div class="domain-card">
+          <div class="domain-tag">sandx-er</div>
+          <h3>Entity Resolution</h3>
+          <p>
+            Infrastructure for resolving fragmented identities across large-scale datasets.
+            Modular blocking, embedding-aware matching, and probabilistic clustering — from
+            raw noisy records to a resolved identity graph.
+          </p>
+          <div class="domain-sectors">
+            <span>Healthcare</span><span>Finance</span><span>Government</span><span>Cybersecurity</span>
+          </div>
+        </div>
+
+        <div class="domain-card">
+          <div class="domain-tag">sandx-graph</div>
+          <h3>Graph Intelligence</h3>
+          <p>
+            Graph-based reasoning and consensus computation over resolved entity networks.
+            Knowledge graph construction, neighborhood similarity, and semantic linkage
+            for recommendation and AI memory systems.
+          </p>
+          <div class="domain-sectors">
+            <span>Knowledge Graphs</span><span>AI Memory</span><span>Fraud Detection</span>
+          </div>
+        </div>
+
+        <div class="domain-card">
+          <div class="domain-tag">sandx-embed</div>
+          <h3>Embedding Systems</h3>
+          <p>
+            Shared latent representation infrastructure used across all SandX engines.
+            Pluggable encoders, high-performance approximate nearest-neighbor indexing,
+            and cross-domain similarity computation.
+          </p>
+          <div class="domain-sectors">
+            <span>Text</span><span>Tabular</span><span>Graph Nodes</span><span>Cross-modal</span>
+          </div>
+        </div>
+
+        <div class="domain-card">
+          <div class="domain-tag">sandx-compute</div>
+          <h3>Distributed Compute</h3>
+          <p>
+            Consensus-aware orchestration of dispersed GPU and compute resources for AI
+            workloads. Distributed workload scheduling, resource allocation, and
+            fault-tolerant execution across heterogeneous infrastructure.
+          </p>
+          <div class="domain-sectors">
+            <span>GPU Orchestration</span><span>AI Compute</span><span>Multi-cluster</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Architecture + Code example -->
+    <section class="architecture" id="architecture">
+      <div class="arch-inner">
+        <div class="arch-text">
+          <div class="section-label">Design Philosophy</div>
+          <h2>Infrastructure, not a product.</h2>
+          <p>
+            SandX is a computational layer that other systems build on. Every engine is
+            independently deployable and composable. Outputs carry probabilistic confidence
+            scores, not binary decisions. All benchmarks are versioned and re-runnable.
+          </p>
+          <p>
+            No token. No speculation. No hype. Technical credibility is the only currency.
+          </p>
+          <ul class="design-principles">
+            <li><span class="bullet">&#x2014;</span> Composable by design: use one engine or all four</li>
+            <li><span class="bullet">&#x2014;</span> Probabilistic-first: every output has a confidence score</li>
+            <li><span class="bullet">&#x2014;</span> Reproducible: all benchmarks re-runnable from public data</li>
+            <li><span class="bullet">&#x2014;</span> Python-first API with R and TypeScript SDKs following</li>
+          </ul>
+        </div>
+        <div class="arch-code" id="docs">
+          <div class="code-header">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+            <span class="code-filename">quickstart.py</span>
+          </div>
+          <pre><code><span class="kw">from</span> sandx <span class="kw">import</span> EntityResolver
+
+<span class="comment"># configure a blocking + matching pipeline</span>
+er = EntityResolver(
+    blocking=<span class="str">"lsh"</span>,
+    similarity=<span class="str">"embedding"</span>,
+    threshold=<span class="num">0.85</span>
+)
+
+<span class="comment"># resolve a noisy record set</span>
+result = er.resolve(records)
+
+<span class="comment"># structured output with confidence</span>
+<span class="kw">for</span> cluster <span class="kw">in</span> result.clusters:
+    <span class="kw">print</span>(cluster.canonical_id,
+          cluster.size,
+          cluster.confidence)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Development Phases -->
+    <section class="phases">
+      <div class="section-label">Development Status</div>
+      <div class="phases-grid">
+
+        <div class="phase phase-active">
+          <div class="phase-num">01</div>
+          <h3>Foundational Identity</h3>
+          <p>
+            Establishing technical namespace, architecture documentation, research foundations,
+            brand identity, and web presence.
+          </p>
+          <span class="badge badge-active">Active &mdash; 2026</span>
+        </div>
+
+        <div class="phase">
+          <div class="phase-num">02</div>
+          <h3>Open Infrastructure Ecosystem</h3>
+          <p>
+            Core open-source repositories: <code>sandx-er</code>, <code>sandx-embed</code>,
+            <code>sandx-graph</code>. Python and R SDKs. Reproducible benchmarks.
+          </p>
+          <span class="badge badge-planned">Planned &mdash; Q4 2026</span>
+        </div>
+
+        <div class="phase">
+          <div class="phase-num">03</div>
+          <h3>Platformization</h3>
+          <p>
+            Infrastructure APIs, managed identity resolution services, distributed AI
+            compute layer, and graph consensus frameworks as commercial services.
+          </p>
+          <span class="badge badge-planned">Planned &mdash; 2027</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Data Pipeline -->
+    <section class="pipeline">
+      <div class="section-label">Data Flow</div>
+      <div class="pipeline-inner">
+        <div class="pipeline-step">
+          <div class="step-icon">&#x2592;</div>
+          <div class="step-label">Fragmented Data</div>
+          <div class="step-sub">Noisy records, graphs, text</div>
+        </div>
+        <div class="pipeline-arrow">&rarr;</div>
+        <div class="pipeline-step">
+          <div class="step-icon chip">embed</div>
+          <div class="step-label">Encode</div>
+          <div class="step-sub">sandx-embed</div>
+        </div>
+        <div class="pipeline-arrow">&rarr;</div>
+        <div class="pipeline-step">
+          <div class="step-icon chip">er</div>
+          <div class="step-label">Resolve</div>
+          <div class="step-sub">sandx-er</div>
+        </div>
+        <div class="pipeline-arrow">&rarr;</div>
+        <div class="pipeline-step">
+          <div class="step-icon chip">graph</div>
+          <div class="step-label">Reason</div>
+          <div class="step-sub">sandx-graph</div>
+        </div>
+        <div class="pipeline-arrow">&rarr;</div>
+        <div class="pipeline-step">
+          <div class="step-icon">&#x25A0;</div>
+          <div class="step-label">Structured Output</div>
+          <div class="step-sub">Resolved &middot; Confident &middot; Actionable</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-logo">SandX.io</span>
+      <div class="footer-links">
+        <a href="#research">Research</a>
+        <a href="#docs">Docs</a>
+        <a href="https://github.com/sandx-io" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <span class="footer-copy">&copy; 2026 SandX.io</span>
+    </div>
+  </footer>
+
+</body>
+</html>
