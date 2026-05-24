@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Building a Production-Grade Entity Resolution Engine — SandX.io</title>
+  <meta name="description" content="How we built sandx-er: a modular Python entity resolution pipeline with benchmark results on Febrl4 (F1=0.977) and DBLP-ACM (F1=0.927)." />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    .post-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    .post-header {
+      padding: 72px 0 52px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 52px;
+    }
+
+    .post-tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      border: 1px solid rgba(200, 168, 112, 0.35);
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+
+    .post-header h1 {
+      font-size: clamp(24px, 4vw, 38px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.8px;
+      margin-bottom: 18px;
+    }
+
+    .post-meta {
+      display: flex;
+      gap: 20px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .post-meta span::before {
+      content: "— ";
+      color: var(--text-dim);
+    }
+    .post-meta span:first-child::before { content: ""; }
+
+    /* Prose */
+    .prose {
+      font-size: 16px;
+      line-height: 1.8;
+      color: var(--text-muted);
+    }
+
+    .prose h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.4px;
+      margin: 52px 0 16px;
+      line-height: 1.2;
+    }
+
+    .prose h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.2px;
+      margin: 32px 0 12px;
+    }
+
+    .prose p {
+      margin-bottom: 20px;
+    }
+
+    .prose a {
+      color: var(--accent);
+      border-bottom: 1px solid rgba(200, 168, 112, 0.3);
+      transition: border-color 0.15s ease;
+    }
+    .prose a:hover { border-color: var(--accent); }
+
+    .prose code {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent);
+      background: rgba(200, 168, 112, 0.1);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .prose ul, .prose ol {
+      margin: 0 0 20px 22px;
+    }
+    .prose li {
+      margin-bottom: 8px;
+    }
+
+    /* Code block */
+    .code-block {
+      background: var(--bg-3);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin: 28px 0;
+    }
+
+    .code-block .code-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-2);
+    }
+
+    .code-block pre {
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    .code-block code {
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--text);
+      background: none;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    /* Results table */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      font-size: 14px;
+    }
+
+    .results-table th {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-2);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .results-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .results-table tr:last-child td { border-bottom: none; }
+
+    .results-table .best {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .results-table .f1-best {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* Pipeline inline diagram */
+    .pipeline-inline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 24px 0;
+      padding: 18px 20px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .pl-step {
+      color: var(--text);
+      background: var(--bg-3);
+      border: 1px solid var(--border-2);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .pl-step.accent {
+      color: var(--accent);
+      border-color: rgba(200, 168, 112, 0.35);
+      background: rgba(200, 168, 112, 0.06);
+    }
+
+    .pl-arrow {
+      color: var(--text-dim);
+    }
+
+    /* Pull quote */
+    .callout {
+      border-left: 2px solid var(--accent);
+      padding: 16px 20px;
+      margin: 32px 0;
+      background: rgba(200, 168, 112, 0.04);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    .callout p {
+      margin: 0;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* Post footer */
+    .post-footer {
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .post-footer a {
+      font-size: 14px;
+      color: var(--text-muted);
+      transition: color 0.15s ease;
+    }
+
+    .post-footer a:hover { color: var(--text); }
+
+    .post-footer .pkg-links {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pkg-link {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent);
+      border: 1px solid rgba(200, 168, 112, 0.3);
+      padding: 5px 12px;
+      border-radius: 4px;
+      transition: border-color 0.15s ease;
+    }
+
+    .pkg-link:hover { border-color: var(--accent); }
+
+    @media (max-width: 600px) {
+      .post-wrap { padding: 0 18px; }
+      .post-header { padding: 48px 0 36px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="logo">SandX<span class="dot">.</span>io</a>
+      <div class="nav-links">
+        <a href="/#research">Research</a>
+        <a href="/#docs">Docs</a>
+        <a href="/blog/">Blog</a>
+        <a href="https://github.com/sandxlab" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <main style="max-width: 100%; padding: 0;">
+  <div class="post-wrap">
+
+    <header class="post-header">
+      <div class="post-tag">Engineering</div>
+      <h1>Building a Production-Grade Entity Resolution Engine in Python</h1>
+      <div class="post-meta">
+        <span>SandX Lab</span>
+        <span>May 2026</span>
+        <span>9 min read</span>
+      </div>
+    </header>
+
+    <article class="prose">
+
+      <p>
+        Every production data system eventually hits the same wall: the same real-world entity appears
+        in multiple records under different names, with different spellings, or with missing fields.
+        A customer is <em>"Acme Corp"</em> in one table and <em>"ACME Corporation"</em> in another.
+        A research paper appears in both DBLP and ACM with slightly different author lists.
+        Entity resolution (ER) is the problem of deciding which records refer to the same thing.
+      </p>
+
+      <p>
+        The naive approach — fuzzy string matching with a threshold — breaks down fast.
+        At O(N²) candidate pairs, a 100,000-record dataset generates 5 billion comparisons.
+        And a single threshold applied globally ignores the fact that <em>"Smith"</em> is a worse
+        identifier than <em>"Yannis Ioannidis"</em>.
+      </p>
+
+      <p>
+        We built <code>sandx-er</code> to solve this properly: a modular, composable Python pipeline
+        that handles the full ER workflow — blocking, matching, and clustering — with every output
+        carrying a probabilistic confidence score. This post covers the architecture and
+        benchmark results on two standard datasets.
+      </p>
+
+      <h2>The Pipeline</h2>
+
+      <p>
+        Entity resolution decomposes into three stages. <strong>Blocking</strong> reduces
+        O(N²) comparisons to a tractable candidate set. <strong>Matching</strong> scores each
+        candidate pair with a similarity measure. <strong>Clustering</strong> reconciles pairwise
+        decisions into globally consistent entity groups.
+      </p>
+
+      <div class="pipeline-inline">
+        <span class="pl-step">Raw records</span>
+        <span class="pl-arrow">→</span>
+        <span class="pl-step accent">Blocking</span>
+        <span class="pl-arrow">→</span>
+        <span class="pl-step accent">Matching</span>
+        <span class="pl-arrow">→</span>
+        <span class="pl-step accent">Clustering</span>
+        <span class="pl-arrow">→</span>
+        <span class="pl-step">Resolved identity graph</span>
+      </div>
+
+      <p>
+        Each stage is independently configurable. The full API:
+      </p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot red"></span>
+          <span class="code-dot yellow"></span>
+          <span class="code-dot green"></span>
+          <span class="code-filename">quickstart.py</span>
+        </div>
+        <pre><code><span class="kw">from</span> sandx_er <span class="kw">import</span> EntityResolver
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+records = pd.DataFrame({
+    <span class="str">"name"</span>:  [<span class="str">"Acme Corp"</span>, <span class="str">"ACME Corporation"</span>, <span class="str">"GlobalTech Inc"</span>, <span class="str">"Global Tech"</span>],
+    <span class="str">"city"</span>:  [<span class="str">"Boston"</span>,    <span class="str">"Boston"</span>,           <span class="str">"New York"</span>,      <span class="str">"New York"</span>],
+})
+
+er = EntityResolver(
+    blocking=<span class="str">"lsh"</span>,       <span class="comment"># MinHash LSH candidate generation</span>
+    similarity=<span class="str">"jaccard"</span>, <span class="comment"># character shingle Jaccard scoring</span>
+    threshold=<span class="num">0.4</span>,
+)
+
+result = er.resolve(records)
+
+<span class="kw">for</span> cluster <span class="kw">in</span> result.clusters:
+    <span class="kw">print</span>(cluster.canonical_id[:<span class="num">8</span>], cluster.record_ids, cluster.confidence)</code></pre>
+      </div>
+
+      <h3>Blocking strategies</h3>
+
+      <p>
+        <code>sandx-er</code> ships three blocking methods. <strong>LSH (MinHash)</strong>
+        hashes each record into a signature and groups candidate pairs by band collision —
+        no key field required, works across all string columns simultaneously.
+        <strong>Sorted Neighborhood (SNM)</strong> sorts records by a user-specified key field
+        and compares within a sliding window — faster and higher precision when the key is
+        a reliable discriminator. <strong>Embedding ANN</strong> uses approximate nearest-neighbor
+        search in embedding space via <code>sandx-embed</code>, optimal for semantic similarity.
+      </p>
+
+      <h3>Matching</h3>
+
+      <p>
+        The default scorer computes character-level Jaccard similarity across all string fields
+        concatenated into a single document representation. Character shingles (3-grams by default)
+        handle the most common noise patterns — typos, abbreviations, reordered tokens —
+        without requiring field-level alignment. A <code>CosineSimilarityScorer</code>
+        is available for embedding-based matching.
+      </p>
+
+      <h3>Clustering</h3>
+
+      <p>
+        Connected components clustering assigns all records reachable through above-threshold
+        similarity edges to the same entity. It is fast and correct when the match graph
+        is clean. Correlation clustering (Kwik-Cluster) runs additional local optimization
+        to break over-merged clusters caused by transitivity errors.
+      </p>
+
+      <h2>Benchmark 1: Febrl4</h2>
+
+      <p>
+        Febrl4 is a synthetic person record linkage dataset included in the Python
+        <code>recordlinkage</code> package. 5,000 records per table, 5,000 true 1:1 matches,
+        with realistic noise: typos, transpositions, and missing field values.
+        It is a standard baseline for single-attribute linkage tasks.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot red"></span>
+          <span class="code-dot yellow"></span>
+          <span class="code-dot green"></span>
+          <span class="code-filename">terminal</span>
+        </div>
+        <pre><code>pip install sandx-er recordlinkage
+python -m benchmarks.febrl4</code></pre>
+      </div>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Config</th>
+            <th>Precision</th>
+            <th>Recall</th>
+            <th>F1</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="best">LSH + Jaccard &middot; threshold=0.3</td>
+            <td class="best">1.000</td>
+            <td class="best">0.955</td>
+            <td class="f1-best">0.977</td>
+            <td>1.1s</td>
+          </tr>
+          <tr>
+            <td>SNM (surname) + Jaccard &middot; threshold=0.3</td>
+            <td>1.000</td>
+            <td>0.384</td>
+            <td>0.555</td>
+            <td>0.4s</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        LSH achieves near-perfect F1 (0.977) because Febrl4 noise is field-level — corrupted
+        surnames, swapped birth dates — and LSH operates across all fields simultaneously,
+        finding matches even when any single field is corrupted. SNM with <code>surname</code>
+        as the sort key achieves perfect precision but low recall: noisy surnames break the
+        neighborhood window.
+      </p>
+
+      <div class="callout">
+        <p>LSH generalizes across field-level noise; SNM requires a stable discriminating key.</p>
+      </div>
+
+      <h2>Benchmark 2: DBLP-ACM</h2>
+
+      <p>
+        DBLP-ACM is a real-world record linkage benchmark from the Magellan ER collection
+        (Köpcke &amp; Rahm, 2010). 2,616 DBLP publication records linked against 2,294 ACM
+        records — the same academic papers indexed differently by two databases.
+        Fields: title, authors, venue, year. Ground truth: 2,220 matching pairs.
+      </p>
+
+      <p>
+        Unlike Febrl4, the noise here is structural: venue names abbreviated differently
+        (<em>"VLDB"</em> vs <em>"Very Large Data Bases"</em>), author name formatting
+        inconsistencies, and title variations between the two indexing systems.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot red"></span>
+          <span class="code-dot yellow"></span>
+          <span class="code-dot green"></span>
+          <span class="code-filename">terminal</span>
+        </div>
+        <pre><code>python -m benchmarks.dblp_acm --data-path /path/to/dblp_acm.csv
+python -m benchmarks.dblp_acm --data-path /path/to/dblp_acm.csv \
+    --blocking snm --key-field title</code></pre>
+      </div>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Config</th>
+            <th>Precision</th>
+            <th>Recall</th>
+            <th>F1</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>LSH + Jaccard &middot; threshold=0.5</td>
+            <td>0.697</td>
+            <td>0.925</td>
+            <td>0.795</td>
+            <td>0.9s</td>
+          </tr>
+          <tr>
+            <td>LSH + Jaccard &middot; threshold=0.7</td>
+            <td>0.900</td>
+            <td>0.653</td>
+            <td>0.757</td>
+            <td>1.1s</td>
+          </tr>
+          <tr>
+            <td class="best">SNM (title) + Jaccard &middot; threshold=0.5</td>
+            <td class="best">0.899</td>
+            <td class="best">0.957</td>
+            <td class="f1-best">0.927</td>
+            <td>0.3s</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        SNM with <code>title</code> as the sort key wins convincingly: F1=0.927 in 0.3 seconds.
+        Academic paper titles are stable identifiers — different databases rarely abbreviate
+        or corrupt them — so sorted-neighborhood retrieval finds almost every true match without
+        the false positives that LSH generates at threshold=0.5. LSH at threshold=0.7 recovers
+        precision but at the cost of recall.
+      </p>
+
+      <div class="callout">
+        <p>
+          SNM beats LSH when the blocking key is stable and domain-specific. Choosing the right
+          blocking strategy is the single highest-leverage decision in an ER pipeline.
+        </p>
+      </div>
+
+      <h2>What the Numbers Mean</h2>
+
+      <p>
+        Two benchmarks from different domains tell a consistent story:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Blocking strategy dominates.</strong> The gap between LSH F1=0.795 and
+          SNM F1=0.927 on DBLP-ACM is larger than any threshold tuning could close.
+          The right blocking method is selected by answering one question: is there a field
+          in the dataset that both sources represent consistently?
+        </li>
+        <li>
+          <strong>LSH is the safe default.</strong> When no reliable key exists — or when
+          noise may affect any single field — LSH generalizes across all fields and achieves
+          strong recall at the cost of some precision. The Febrl4 result (F1=0.977) shows
+          what it can achieve on a well-matched problem.
+        </li>
+        <li>
+          <strong>Sub-second throughput at these scales.</strong> 10,000 combined records
+          resolve in under 1.1 seconds on a laptop, including all three pipeline stages.
+          The bottleneck at scale is candidate generation in blocking, not scoring.
+        </li>
+      </ul>
+
+      <h2>Installation</h2>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot red"></span>
+          <span class="code-dot yellow"></span>
+          <span class="code-dot green"></span>
+          <span class="code-filename">terminal</span>
+        </div>
+        <pre><code>pip install sandx-er</code></pre>
+      </div>
+
+      <p>
+        For embedding-based blocking and matching (requires <code>sandx-embed</code>):
+      </p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-dot red"></span>
+          <span class="code-dot yellow"></span>
+          <span class="code-dot green"></span>
+          <span class="code-filename">terminal</span>
+        </div>
+        <pre><code>pip install "sandx-er[embed]"</code></pre>
+      </div>
+
+      <p>
+        All benchmark scripts are in the
+        <a href="https://github.com/sandxlab/sandx-er/tree/main/benchmarks" target="_blank" rel="noopener">benchmarks/</a>
+        directory of the repo. Results are fully reproducible from public data.
+      </p>
+
+      <h2>What Is Next</h2>
+
+      <p>
+        The next benchmark target is Abt-Buy: 1,081 Abt.com product records matched against
+        1,092 Buy.com records, 1,097 true matches. E-commerce product names are structurally
+        different from academic titles and person records — higher variance in format, more
+        numerical attributes, more abbreviations — making it a useful stress test for the
+        blocking stage.
+      </p>
+
+      <p>
+        Longer term, the sandx-er pipeline feeds directly into
+        <a href="https://github.com/sandxlab/sandx-graph" target="_blank" rel="noopener">sandx-graph</a>:
+        resolved entity clusters become nodes in a knowledge graph, and the graph consensus
+        engine propagates confidence scores across neighborhood relationships.
+      </p>
+
+    </article>
+
+    <footer class="post-footer">
+      <a href="/blog/">&larr; All posts</a>
+      <div class="pkg-links">
+        <a href="https://pypi.org/project/sandx-er/" class="pkg-link" target="_blank" rel="noopener">PyPI &rarr;</a>
+        <a href="https://github.com/sandxlab/sandx-er" class="pkg-link" target="_blank" rel="noopener">GitHub &rarr;</a>
+      </div>
+    </footer>
+
+  </div>
+  </main>
+
+  <footer style="margin-top: 80px;">
+    <div class="footer-inner">
+      <span class="footer-logo">SandX.io</span>
+      <div class="footer-links">
+        <a href="/#research">Research</a>
+        <a href="/#docs">Docs</a>
+        <a href="/blog/">Blog</a>
+        <a href="https://github.com/sandxlab" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <span class="footer-copy">&copy; 2026 SandX.io</span>
+    </div>
+  </footer>
+
+</body>
+</html>
