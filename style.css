@@ -326,6 +326,37 @@ main {
 .num     { color: #f78c6c; }
 .comment { color: var(--text-dim); font-style: italic; }
 
+/* code block tabs */
+.code-tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.code-tab {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 12px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.code-tab:hover { color: var(--text); }
+
+.code-tab.active {
+  color: var(--text);
+  border-color: var(--border-2);
+  background: var(--bg-3);
+}
+
+.code-panel { display: none; }
+.code-panel.active { display: block; }
+
 /* ─── Phases ─────────────────────────────────────────────────── */
 .phases {
   padding: 80px 0;
@@ -397,6 +428,7 @@ main {
 
 .badge-active  { background: rgba(200, 168, 112, 0.15); color: var(--accent); }
 .badge-planned { background: rgba(255,255,255,0.04);    color: var(--text-dim); }
+.badge-done    { background: rgba(255,255,255,0.05);    color: #6aaa6a; }
 
 /* ─── Pipeline ───────────────────────────────────────────────── */
 .pipeline {

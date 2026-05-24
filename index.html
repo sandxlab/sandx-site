@@ -28,7 +28,7 @@
 
     <!-- Hero -->
     <section class="hero">
-      <div class="hero-tag">Phase 2 &mdash; Open Infrastructure Ecosystem</div>
+      <div class="hero-tag">Phase 3 &mdash; Platformization</div>
       <h1>Transforming fragmented signals into coherent computational meaning.</h1>
       <p class="hero-sub">
         SandX builds deep infrastructure for entity resolution, graph intelligence,
@@ -150,19 +150,101 @@ result = er.resolve(records)
       </div>
     </section>
 
+    <!-- Platform API -->
+    <section class="architecture" id="api" style="border-top: 1px solid var(--border); padding: 80px 0;">
+      <div class="arch-inner">
+        <div class="arch-text">
+          <div class="section-label">Platform API</div>
+          <h2>Use it over HTTP.</h2>
+          <p>
+            The SandX Platform API wraps all four engines as a managed REST service.
+            Send records, get resolved clusters back &mdash; no Python environment required.
+          </p>
+          <p>
+            Authenticate with an API key. Self-host in one command via Docker, or use
+            the managed endpoint.
+          </p>
+          <ul class="design-principles">
+            <li><span class="bullet">&#x2014;</span> <code>POST /v1/er/resolve</code> &mdash; entity resolution</li>
+            <li><span class="bullet">&#x2014;</span> <code>POST /v1/graph/consensus</code> &mdash; graph reasoning</li>
+            <li><span class="bullet">&#x2014;</span> <code>POST /v1/embed/encode</code> &mdash; embeddings</li>
+            <li><span class="bullet">&#x2014;</span> <code>POST /v1/compute/jobs</code> &mdash; distributed compute</li>
+          </ul>
+          <div class="cta-group" style="margin-top: 28px;">
+            <a href="https://github.com/sandxlab" class="btn-secondary" target="_blank" rel="noopener">Self-host on GitHub</a>
+          </div>
+        </div>
+        <div class="arch-code">
+          <div class="code-header">
+            <span class="code-dot red"></span>
+            <span class="code-dot yellow"></span>
+            <span class="code-dot green"></span>
+            <div class="code-tabs">
+              <button class="code-tab active" data-panel="api-curl">curl</button>
+              <button class="code-tab" data-panel="api-python">python</button>
+            </div>
+          </div>
+          <div class="code-panel active" id="api-curl">
+            <pre><code><span class="comment"># resolve entity identity across records</span>
+curl -X POST localhost:8000/v1/er/resolve \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "records": [
+      {"id":"1","name":"Acme Corp", "city":"Boston"},
+      {"id":"2","name":"Acme Corp.","city":"Boston"}
+    ],
+    "config": {"threshold": 0.4}
+  }'</span>
+
+<span class="comment"># response</span>
+{
+  <span class="str">"clusters"</span>: [{
+    <span class="str">"canonical_id"</span>: <span class="str">"3f2a1b8c-..."</span>,
+    <span class="str">"record_ids"</span>:  [<span class="str">"1"</span>, <span class="str">"2"</span>],
+    <span class="str">"confidence"</span>:  <span class="num">0.81</span>,
+    <span class="str">"size"</span>:        <span class="num">2</span>
+  }],
+  <span class="str">"n_records"</span>: <span class="num">2</span>,  <span class="str">"n_clusters"</span>: <span class="num">1</span>,
+  <span class="str">"elapsed_ms"</span>: <span class="num">4.2</span>
+}</code></pre>
+          </div>
+          <div class="code-panel" id="api-python">
+            <pre><code><span class="kw">import</span> requests
+
+resp = requests.post(
+    <span class="str">"http://localhost:8000/v1/er/resolve"</span>,
+    headers={<span class="str">"X-API-Key"</span>: <span class="str">"sk-dev"</span>},
+    json={
+        <span class="str">"records"</span>: [
+            {<span class="str">"id"</span>: <span class="str">"1"</span>, <span class="str">"name"</span>: <span class="str">"Acme Corp"</span>,  <span class="str">"city"</span>: <span class="str">"Boston"</span>},
+            {<span class="str">"id"</span>: <span class="str">"2"</span>, <span class="str">"name"</span>: <span class="str">"Acme Corp."</span>, <span class="str">"city"</span>: <span class="str">"Boston"</span>},
+        ],
+        <span class="str">"config"</span>: {<span class="str">"threshold"</span>: <span class="num">0.4</span>}
+    }
+)
+
+<span class="kw">for</span> c <span class="kw">in</span> resp.json()[<span class="str">"clusters"</span>]:
+    <span class="kw">print</span>(c[<span class="str">"canonical_id"</span>][:<span class="num">8</span>],
+          c[<span class="str">"size"</span>], c[<span class="str">"confidence"</span>])
+<span class="comment"># 3f2a1b8c  2  0.81</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Development Phases -->
     <section class="phases">
       <div class="section-label">Development Status</div>
       <div class="phases-grid">
 
-        <div class="phase phase-active">
+        <div class="phase">
           <div class="phase-num">01</div>
           <h3>Foundational Identity</h3>
           <p>
             Establishing technical namespace, architecture documentation, research foundations,
             brand identity, and web presence.
           </p>
-          <span class="badge badge-active">Active &mdash; 2026</span>
+          <span class="badge badge-done">Complete &mdash; 2026</span>
         </div>
 
         <div class="phase">
@@ -172,17 +254,17 @@ result = er.resolve(records)
             Core open-source repositories: <code>sandx-er</code>, <code>sandx-embed</code>,
             <code>sandx-graph</code>. Python and R SDKs. Reproducible benchmarks.
           </p>
-          <span class="badge badge-active">Active &mdash; 2026</span>
+          <span class="badge badge-done">Complete &mdash; 2026</span>
         </div>
 
-        <div class="phase">
+        <div class="phase phase-active">
           <div class="phase-num">03</div>
           <h3>Platformization</h3>
           <p>
             Infrastructure APIs, managed identity resolution services, distributed AI
             compute layer, and graph consensus frameworks as commercial services.
           </p>
-          <span class="badge badge-planned">Planned &mdash; 2027</span>
+          <span class="badge badge-active">Active &mdash; 2026</span>
         </div>
 
       </div>
@@ -263,6 +345,16 @@ result = er.resolve(records)
   document.querySelector('.newsletter-form').addEventListener('submit', function (e) {
     e.preventDefault();
     window.location.href = '/newsletter/';
+  });
+
+  document.querySelectorAll('.code-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var block = this.closest('.arch-code');
+      block.querySelectorAll('.code-tab').forEach(function (t) { t.classList.remove('active'); });
+      block.querySelectorAll('.code-panel').forEach(function (p) { p.classList.remove('active'); });
+      this.classList.add('active');
+      block.querySelector('#' + this.dataset.panel).classList.add('active');
+    });
   });
 </script>
 
