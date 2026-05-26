@@ -17,6 +17,7 @@
       <a href="/" class="logo">SandX<span class="dot">.</span>io</a>
       <div class="nav-links">
         <a href="#research">Research</a>
+        <a href="#demo">Demo</a>
         <a href="#docs">Docs</a>
         <a href="/blog/">Blog</a>
         <a href="https://github.com/sandxlab" target="_blank" rel="noopener">GitHub</a>
@@ -229,6 +230,96 @@ resp = requests.post(
 <span class="comment"># 3f2a1b8c  2  0.81</span></code></pre>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Demo: Raw to Clean -->
+    <section class="demo-section" id="demo">
+      <div class="demo-inner">
+        <div class="section-label">See It In Action</div>
+        <h2>From fragmented records to clean entities.</h2>
+        <p class="demo-desc">
+          Hand sandx-er a DataFrame of raw records &mdash; with duplicate names, punctuation
+          differences, abbreviations, and address noise. Get back resolved identity clusters
+          with probabilistic confidence scores. Three lines of code.
+        </p>
+
+        <div class="demo-panels">
+
+          <!-- Before -->
+          <div class="demo-panel">
+            <div class="demo-panel-hdr">
+              <div class="demo-dots">
+                <span class="demo-dot r"></span>
+                <span class="demo-dot y"></span>
+                <span class="demo-dot g"></span>
+              </div>
+              <span class="demo-panel-title">raw_vendors.csv &mdash; 9 records</span>
+            </div>
+            <pre><span class="d-mut">id    name                         city</span>
+<span class="d-dim">────  ───────────────────────────  ─────────────</span>
+v01   Meridian Health Solutions    Boston, MA
+v02   Meridian Health Solutions    Boston MA    <span class="d-dim">← punct</span>
+v03   Meridian Health Soln. LLC    Boston       <span class="d-dim">← abbrev</span>
+v04   BioCore Analytics Inc.       San Diego, CA
+v05   Bio-Core Analytics           San Diego CA <span class="d-dim">← hyphen</span>
+v06   Biocore Analytics LLC        San Diego    <span class="d-dim">← case</span>
+v07   DataVault Systems Corp.      Austin, TX
+v08   Data Vault Systems           Austin TX    <span class="d-dim">← split</span>
+v09   DataVault Sys.               Austin       <span class="d-dim">← abbrev</span></pre>
+          </div>
+
+          <!-- Arrow -->
+          <div class="demo-connector">
+            <div class="demo-conn-arrow">&rarr;</div>
+            <div class="demo-conn-label">sandx&#x2011;er</div>
+          </div>
+
+          <!-- After -->
+          <div class="demo-panel">
+            <div class="demo-panel-hdr">
+              <div class="demo-dots">
+                <span class="demo-dot r"></span>
+                <span class="demo-dot y"></span>
+                <span class="demo-dot g"></span>
+              </div>
+              <span class="demo-panel-title">resolved entities &mdash; 3 clusters</span>
+            </div>
+            <pre><span class="d-mut">entity                      conf    &times;   records</span>
+<span class="d-dim">──────────────────────────  ──────  ──  ─────────────</span>
+<span class="d-grn">Meridian Health Solutions</span>   <span class="d-acc">0.71</span>   3   v01 v02 v03
+<span class="d-grn">BioCore Analytics Inc.</span>      <span class="d-acc">0.68</span>   3   v04 v05 v06
+<span class="d-grn">DataVault Systems Corp.</span>     <span class="d-acc">0.74</span>   3   v07 v08 v09
+
+
+<span class="d-dim">9 records &rarr; 3 entities  [8ms]</span></pre>
+          </div>
+
+        </div><!-- /.demo-panels -->
+
+        <!-- Code -->
+        <div class="demo-code-wrap">
+          <div class="demo-code-hdr">
+            <div class="demo-dots">
+              <span class="demo-dot r"></span>
+              <span class="demo-dot y"></span>
+              <span class="demo-dot g"></span>
+            </div>
+            <span class="demo-panel-title">resolve.py</span>
+          </div>
+          <pre><code><span class="kw">from</span> sandx_er <span class="kw">import</span> EntityResolver
+
+er = EntityResolver(
+    blocking=<span class="str">"lsh"</span>,
+    similarity=<span class="str">"jaccard"</span>,
+    threshold=<span class="num">0.30</span>,
+)
+result = er.resolve(df)          <span class="comment"># df: any pandas DataFrame</span>
+
+<span class="kw">for</span> c <span class="kw">in</span> result.clusters:
+    <span class="kw">print</span>(c.canonical_id[:<span class="num">8</span>], c.size, c.confidence)</code></pre>
+        </div>
+
       </div>
     </section>
 
